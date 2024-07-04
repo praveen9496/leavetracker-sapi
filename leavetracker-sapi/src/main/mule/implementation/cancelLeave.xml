@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<sub-flow name="cancelLeaveSub_Flow" doc:id="2add59c3-45d9-46ab-ba9e-80c1ab4b9b03" >
+		<set-variable value="#[%dw 2.0&#10;output application/json&#10;---&#10;attributes.uriParams.'EmployeeID']" doc:name="input parameters" doc:id="d5acb7ba-70fb-489d-8417-28f09aa89673" variableName="employeeID"/>
+		<set-variable value="#[%dw 2.0&#10;output application/json&#10;---&#10;attributes.queryParams.fromDate]" doc:name="fromdate" doc:id="2dcb6d1d-bf6d-40ec-9fb8-193c37bf0672" variableName="fromdate"/>
+		<set-variable value="#[%dw 2.0&#10;output application/json&#10;---&#10;attributes.queryParams.toDate]" doc:name="todate" doc:id="60552457-05ba-4e78-a211-40dbfe42af14" variableName="todate"/>
+		<until-successful maxRetries="${until.retries}" doc:name="Until Successful" doc:id="efe8f840-5599-447f-85c8-6912a6978a8c" millisBetweenRetries="${until.millisecs}">
+			<try doc:name="Try" doc:id="2be62f44-3047-48e4-b4d8-76a41fade518">
+			<db:delete doc:name="cancel leave from db" doc:id="d8bc47c6-d41c-4052-9dd4-7c5819d05f87" config-ref="Database_Config">
+			<db:sql><![CDATA[DELETE  FROM public.addleave where "employeeid" = :employeeid and "fromdate" = :fromdate and "todate" =:todate;]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	employeeid: vars.employeeID,
+	fromdate : vars.fromdate,
+	todate : vars.todate
+}]]]></db:input-parameters>
+		</db:delete>
+				<set-payload value='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;  message: "Leave request deleted"&#10;}]' doc:name="response" doc:id="b6ded91d-8249-4095-9085-4286e94d44b4" />
+				<error-handler ref="db-errorHandler" />
+		</try>
+		</until-successful>
+	</sub-flow>
+</mule>

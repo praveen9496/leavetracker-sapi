@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<sub-flow name="leaveReportSub_Flow" doc:id="c3b8bd89-050d-46a4-a9d0-ba9fe03c347a" >
+		<set-payload value="#[%dw 2.0&#10;output application/json&#10;---&#10;attributes.uriParams.'EmployeeID']" doc:name="input parameters" doc:id="5bcb7990-1cde-4df8-96a3-61d57ffbb8d1" />
+		<until-successful maxRetries="${until.retries}" doc:name="Until Successful" doc:id="2f14104a-83fc-43c2-9156-3e2f49cfa722" millisBetweenRetries="${until.millisecs}">
+			<try doc:name="Try" doc:id="faf8f5e6-a59a-40fc-8add-55422cd8894b">
+			<db:select doc:name="fetching leaveReport from db" doc:id="dd70d4f9-993e-400c-8ffd-966c1b0e6b94" config-ref="Database_Config">
+			<db:sql><![CDATA[SELECT * FROM public.addleave where "employeeid"= :employeeid;
+
+]]></db:sql>
+			<db:input-parameters><![CDATA[#[{employeeid: payload}]]]></db:input-parameters>
+		</db:select>
+				<set-payload value="#[%dw 2.0&#10;output application/json&#10;---&#10;payload]" doc:name="response" doc:id="3e64e39c-644c-437e-bbc9-b610504c32e9" />
+				<error-handler ref="db-errorHandler" />
+		</try>
+		</until-successful>
+	</sub-flow>
+</mule>

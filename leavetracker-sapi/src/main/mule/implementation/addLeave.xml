@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<sub-flow name="addLeaveSub_Flow" doc:id="23f9bd09-5cec-4b5c-bc6a-e50116032f09" >
+		<set-payload value="#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;	EmployeeID: payload.EmployeeID,&#10;	leaveType : payload.leaveType,&#10;	leaveDuration : payload.leaveDuration,&#10;	fromDate: payload.fromDate,&#10;	toDate: payload.toDate,&#10;	reasonForLeave: payload.reasonForLeave,&#10;	recordID: uuid()&#10;}]" doc:name="input parameters" doc:id="426d0078-b634-4afe-8231-b5fe2416f58d" />
+		<until-successful maxRetries="${until.retries}" doc:name="Until Successful" doc:id="21e0a1dc-5b7f-4380-9bb8-140430097076" millisBetweenRetries="${until.millisecs}">
+			<try doc:name="Try" doc:id="b932045f-7ac1-4a18-970c-0c157934da4b">
+			<db:insert doc:name="posting leave in db" doc:id="57cb37b5-389b-4a77-997f-3bd510d2a918" config-ref="Database_Config">
+			<db:sql><![CDATA[INSERT INTO public.addleave
+(employeeid, leavetype, leaveduration, fromdate, todate, reasonforleave, recordid)
+VALUES(:EmployeeID, :leaveType, :leaveDuration, :fromDate, :toDate, :reasonForLeave, :recordID);
+]]></db:sql>
+			<db:input-parameters><![CDATA[#[payload]]]></db:input-parameters>
+		</db:insert>
+				<set-payload value='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;  status: "Leave applied successfully"&#10;}]' doc:name="response" doc:id="bf2177dd-7bf7-4e28-90e7-d07c075558f1" />
+				<error-handler ref="db-errorHandler" />
+		</try>
+		</until-successful>
+	</sub-flow>
+</mule>

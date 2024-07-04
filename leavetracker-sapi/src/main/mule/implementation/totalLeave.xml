@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<sub-flow name="totalLeave-get-Sub_Flow" doc:id="78ff2bda-64f9-4a88-a17d-177ee9921965" >
+		<until-successful maxRetries="5" doc:name="Until Successful" doc:id="2c85b3fa-bd02-4ecb-8333-46a1c74b67ae" >
+			<try doc:name="Try" doc:id="8d9fa67b-6ff4-457b-b1d2-1c352db82b5e">
+			<db:select doc:name="fetching total leave from db" doc:id="f12b3ec0-e213-4f1f-aa43-918713841ddb" config-ref="Database_Config">
+			<db:sql><![CDATA[SELECT * FROM public.totalleave;
+]]></db:sql>
+		</db:select>
+				<set-payload value="#[%dw 2.0&#10;output application/json&#10;---&#10;[{&#10;  sickLeave: payload.sickleave[0],&#10;  personalLeave : payload.personalleave[0]&#10;}]]" doc:name="response" doc:id="192ffae9-ba27-439e-b549-1213eda25dfa" />
+				<error-handler ref="db-errorHandler" />
+		</try>
+		</until-successful>
+	</sub-flow>
+	<sub-flow name="totalLeave-put-Sub_Flow" doc:id="968394cf-7acf-4bc9-8626-21c0e12e5a4e" >
+		<set-payload value='#[%dw 2.0&#10;output application/json&#10;---&#10;[{&#10;	"sickleave" : payload.sickLeave[0],&#10;	"personalleave" : payload.personalLeave[0]&#10;}]]' doc:name="input parameters" doc:id="6587dd2a-bbb9-485b-bdd3-08fb4e1bac2d" />
+		<until-successful maxRetries="${until.retries}" doc:name="Until Successful" doc:id="c466478d-2272-4e04-aaf5-9bcdcce8d62b" millisBetweenRetries="${until.millisecs}">
+			<try doc:name="Try" doc:id="0bb88f70-074d-4e3f-a95c-d6c487995230">
+			<db:update doc:name="Updating total leave in db" doc:id="7b6e3a01-60ba-4f28-82bd-84ec2e35440d" config-ref="Database_Config">
+			<db:sql><![CDATA[UPDATE public.totalleave SET sickleave= :sickleave, personalleave= :personalleave;]]></db:sql>
+			<db:input-parameters><![CDATA[#[payload[0]]]]></db:input-parameters>
+		</db:update>
+				<set-payload value='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;  message: "total Leave updated"&#10;}]' doc:name="response" doc:id="cc054b25-69af-4b04-b2b4-4df7f7f7c0b4" />
+				<error-handler ref="db-errorHandler" />
+		</try>
+		</until-successful>
+	</sub-flow>
+</mule>

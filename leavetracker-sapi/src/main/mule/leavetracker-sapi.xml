@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd ">
+    
+    <flow name="leavetracker-sapi-main">
+        <http:listener path="${http.path}" config-ref="leavetracker-sapi-httpListenerConfig">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="leavetracker-sapi-config" />
+		<error-handler ref="main-errorHandler" />
+        
+        
+    </flow>
+    <flow name="leavetracker-sapi-console">
+        <http:listener path="/console/*" config-ref="leavetracker-sapi-httpListenerConfig">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="leavetracker-sapi-config"/>
+		<error-handler ref="console-errorHandler" />
+        
+    </flow>
+    <flow name="put:\Leave\totalLeave:application\json:leavetracker-sapi-config">
+		<flow-ref doc:name="totalLeave-put-Sub_Flow" doc:id="d28f0056-0dd3-4a03-bcdf-8132af5b9cf0" name="totalLeave-put-Sub_Flow"/>
+    </flow>
+    <flow name="delete:\Leave\cancelLeave\(EmployeeID):leavetracker-sapi-config">
+		<flow-ref doc:name="cancelLeaveSub_Flow" doc:id="3b34c204-ccb8-4ea6-869f-33d58b0ea9d3" name="cancelLeaveSub_Flow"/>
+    </flow>
+    <flow name="get:\Leave\totalLeave:leavetracker-sapi-config">
+		<flow-ref doc:name="totalLeave-get-Sub_Flow" doc:id="9202b10f-9fb2-409d-be18-b3f19154eeaa" name="totalLeave-get-Sub_Flow"/>
+    </flow>
+    <flow name="get:\Leave\leaveReport\(EmployeeID):leavetracker-sapi-config">
+		<flow-ref doc:name="leaveReportSub_Flow" doc:id="7f7e9337-6db4-49cc-978c-1a1821478599" name="leaveReportSub_Flow"/>
+    </flow>
+    <flow name="post:\Leave\holidays:application\json:leavetracker-sapi-config">
+		<flow-ref doc:name="post-holidaySub_Flow" doc:id="2f94d6fe-c6de-4af5-bd2d-d9457df85f78" name="post-holidaySub_Flow"/>
+    </flow>
+    <flow name="get:\Leave\holidays:leavetracker-sapi-config">
+		<set-payload value='#[if(isEmpty(attributes.queryParams.Date) == false) "SELECT * FROM public.holidays where h_date = :date;"   else "SELECT * FROM public.holidays;"]' doc:name="input paramteres" doc:id="f64c8d8f-e541-4380-8f33-9e9c0ec1d49b" />
+		<set-variable value="#[attributes.queryParams.Date]" doc:name="date Variable" doc:id="3272677f-21f6-4fb4-b4de-01e393486ea5" variableName="date"/>
+		<flow-ref doc:name="get-holidaySub_Flow" doc:id="e0775266-73ce-43bf-997a-e9144c15669b" name="get-holidaySub_Flow"/>
+    </flow>
+    <flow name="post:\Leave\addLeave:application\json:leavetracker-sapi-config">
+		<flow-ref doc:name="addLeaveSub_Flow" doc:id="2f0a2a21-f74a-4a22-bb71-f3318defec13" name="addLeaveSub_Flow"/>
+    </flow>
+</mule>
